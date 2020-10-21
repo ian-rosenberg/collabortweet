@@ -1078,6 +1078,95 @@ app.post('/range', function (req, res) {
 })
 
 // Send the view for doing labeling
+app.get('/multi-labelView/:id', function (req, res) {
+
+    if (!("user" in req.session) || req.session.user === null) {
+
+        console.log("User is not logged in...");
+        res.redirect('/')
+
+        return;
+    }
+
+    // Store the task ID in the session
+    var requestedTask = req.params.id
+    req.session.taskId = requestedTask
+
+    var currentUser = req.session.user
+    console.log("Current User Session: " + currentUser.screenname)
+
+    db.get('SELECT taskName, question FROM tasks WHERE taskId = ?', requestedTask)
+        .then(function (taskData) {
+            taskMap = {
+                taskId: requestedTask,
+                taskName: taskData.taskName,
+                question: taskData.question,
+            }
+
+            return Promise.all([
+                taskMap,
+                db.all('SELECT labelId, labelText, parentLabel FROM labels WHERE taskId = ?', requestedTask)
+            ]);
+        })
+        .then(function (labelData) {
+
+            var taskData = labelData[0];
+            var labelList = labelData[1];
+
+            // A map of label IDs and their related metadata
+            var labelMap = {};
+
+            // populate the label map and create a children array
+            labelList.forEach(element => {
+                element['children'] = new Array();
+                element['childrenIds'] = new Array();
+
+                labelMap[element['labelId']] = element;
+            });
+
+            // Populate list of children for each label
+            labelList.forEach(element => {
+                if (element['parentLabel'] > 0) {
+                    // Get the parent label from our map of labels
+                    var parent = labelMap[element['parentLabel']];
+
+                    // Add this element to the children list
+                    parent['children'].push(element);
+                    parent['childrenIds'].push(element['labelId']);
+                }
+            });
+
+            // Set the button index for each label
+            var topButtonIndex = 1;
+            labelList.forEach(element => {
+                if (element['parentLabel'] < 1) {
+
+                    element['buttonIndex'] = topButtonIndex;
+                    topButtonIndex++;
+
+                }
+
+                var localButtonIndex = 1;
+                element['children'].forEach(child => {
+                    child['buttonIndex'] = localButtonIndex;
+                    localButtonIndex++;
+                });
+            });
+
+            dataMap = {
+                taskId: taskData.taskId,
+                taskName: taskData.taskName,
+                question: taskData.question,
+                labels: labelList,
+                authorized: req.session.user ? true : false,
+                user: req.session.user,
+            }
+
+            res.render('multi-labelView', dataMap)
+        });
+})
+
+// Send the view for doing labeling
 app.get('/labelerView/:id', function (req, res) {
 
     if (!("user" in req.session) || req.session.user === null) {

@@ -1,0 +1,60 @@
+//- pairView.pug
+doctype html
+html
+	head
+		include includes/head.pug
+	body
+		include includes/nav.pug
+
+		<!-- Main jumbotron -->
+		div(class="jumbotron")
+			div(class="container")
+				h2 #{taskName} Question:
+				p #{question}
+
+		//- Display options
+		div(class="container")
+
+			div(class="row")
+				div(class="panel panel-default")
+					div(class="panel-body")
+						div(id="element-content-panel")
+
+			- var labelCount = labels.length
+			- var labelIndex = 0
+			while labelIndex < labelCount
+				- var labelItem = labels[labelIndex]
+				- labelIndex++
+
+				if labelItem.parentLabel < 1
+					div(class="row text-center")
+						h4(class="btn btn-primary btn-lg ct-label selected-label", labelindex=labelItem.buttonIndex, labelid=labelItem.labelId, parentid=labelItem.parentLabel, data-childids=labelItem.childrenIds)
+							u= labelItem.buttonIndex
+							span . #{labelItem.labelText}
+				else
+					div(class="row text-center")
+						h4(class="btn btn-primary btn-lg ct-label hidden-label", labelindex=labelItem.buttonIndex, labelid=labelItem.labelId, parentid=labelItem.parentLabel, data-childids=labelItem.childrenIds)
+							u= labelItem.buttonIndex
+							span . #{labelItem.labelText}
+
+
+			//- Footer navigation
+				div(class="row navbar-fixed-bottom")
+					div(class=".col-md-6")
+						ol(class="breadcrumb")
+							li(id="prevCrumb")
+							li(class="active") Current
+							li(id="prevCrumb")
+
+			div(class="modal fade", id="loadingDialog", tabindex="-1" role="dialog")
+				div(class="modal-dialog", role="document")
+					div(class="modal-content")
+						div(class="modal-header")
+							h4(class="modal-title") Please Wait...
+						div(class="modal-body text-center")
+							img(src="/static/imgs/spinner.gif")
+
+		include includes/jsFooter.pug
+
+		<!-- Script for running the pair viewport -->
+		script(src="/static/js/labelview.js")

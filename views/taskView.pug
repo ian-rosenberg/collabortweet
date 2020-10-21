@@ -10,7 +10,7 @@ html
 		div(class="jumbotron")
 			div(class="container")
 				h2 Welcome. Select your task.
-		
+
 		//- Display options
 		div(class="container")
 			h2 Available Tasks:
@@ -26,6 +26,8 @@ html
 									a(href="/labelerView/" + v.taskId) Task #{v.taskId}: #{v.taskName}
 								else if v.taskType == 3
 									a(href="/rangeView/" + v.taskId) Task #{v.taskId}: #{v.taskName}
+								else if v.taskType == 4
+									a(href="/multi-labelView/" + v.taskId) Task #{v.taskId}: #{v.taskName}
 								else
 									p Unsupported Task #{v.taskId}: #{v.taskName}
 
