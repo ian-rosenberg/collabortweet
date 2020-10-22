@@ -1,52 +1,42 @@
 // Call when the document is ready
+var elementId = -1;
+
 $( document ).ready(function() {
 	loadDataElements();
 });
 
-var sendSelectedElement = function(elementId, selectedLabelId) {
-	result = {
-		element: elementId,
-		selected: selectedLabelId,
+var sendSelectedElement = function () {
+	var labels = Array();
+
+	//Get the list of labelIds for the element
+	$(':checked').each(function (item) {
+		labels.push($(this).attr('labelId'));
+	});
+
+	//send each label for a given element
+	for (var i = 0; i < labels.length; i++){
+		labelResult = {
+			element: elementId,
+			selected: labels[i]
+		}
+
+		$.post("/item", labelResult, function (data) {
+			console.log("Successfully sent selection...");
+		});
 	}
 
-	$.post("/item", result, function(data) {
-		console.log("Successfully sent selection...");
-		loadDataElements();
-	})
+	$(':checked').each(function (item) {
+		$(this).prop('checked', false);
+	});
+
+	loadDataElements();
 }
-
-
 
 var regenDisplayableButtons = function() {
 	console.log("Called regen...");
 
 	// turn off the keypress function
 	$(document).off("keypress");
-
-	$('.hidden-label').each(function() {
-		$(this).off("click");
-		$(this).hide();
-	});
-
-	$('.selected-label').each(function() {
-		var labelIndex = $(this).attr('labelindex');
-
-		$(this).show();
-
-		// Set the click function for this label ID
-		$(this).off("click").click(function() {
-			handleButtonClick($(this));
-		});
-
-		// Set the keypress for this label
-		var thisButton = $(this);
-		$(document).keypress(function(e) {
-			if ( e.which-48 == labelIndex ) {
-				handleButtonClick(thisButton);
-			}
-		});		
-
-	});
 }
 
 var loadDataElements = function() {
@@ -65,17 +55,6 @@ var loadDataElements = function() {
 
 			// turn off the keypress function
 			$(document).off("keypress");
-
-			$('.hidden-label').each(function() {
-				$(this).off("click");
-				$(this).hide();
-			});
-
-			$('.selected-label').each(function() {
-				$(this).off("click");
-				$(this).hide();	
-			});
-
 		} else {
 			console.log("Acquired element...");
 
@@ -86,7 +65,12 @@ var loadDataElements = function() {
 
 			$("#loadingDialog").modal('hide');
 			console.log("Loaded element...");
+
+			elementId = dataElement.elementId;
+
+			$('input:button').click(function () {
+				sendSelectedElement();
+			});
 		}
 	})
-
 }

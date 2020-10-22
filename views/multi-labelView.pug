@@ -29,13 +29,13 @@ html
 
 						tr
 							div(class="row text-center")
-								h4(class="button-checkbox ct-label selected-label", labelindex=labelItem.buttonIndex, labelid=labelItem.labelId, parentid=labelItem.parentLabel, data-childids=labelItem.childrenIds)
+								h4(class="ct-label selected-label", eId=labelItem.elementId)
 									td
-										input( type="checkbox" name=labelItem.buttonIndex )
+										input( type="checkbox", name=labelItem.buttonIndex, labelId=labelItem.labelId)
 									td
 										span #{labelItem.labelText}
 
-			input(id=labelItem.elementId, class="row btn btn-primary btn-sm text-center", type="button", value="Update")
+			input(class="row btn btn-primary btn-sm text-center", type="button", value="Submit")
 
 			//- Footer navigation
 				div(class="row navbar-fixed-bottom")
@@ -56,4 +56,4 @@ html
 		include includes/jsFooter.pug
 
 		<!-- Script for running the pair viewport -->
-		script(src="/static/js/labelview.js")
+		script(src="/static/js/multi-labelView.js")
