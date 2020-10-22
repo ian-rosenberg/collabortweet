@@ -19,17 +19,21 @@ html
 				div(class="panel panel-default")
 					div(class="panel-body")
 						div(id="element-content-panel")
+			table(class="table")
+				tbody
+					- var labelCount = labels.length
+					- var labelIndex = 0
+					while labelIndex < labelCount
+						- var labelItem = labels[labelIndex]
+						- labelIndex++
 
-			- var labelCount = labels.length
-			- var labelIndex = 0
-			while labelIndex < labelCount
-				- var labelItem = labels[labelIndex]
-				- labelIndex++
-
-				div(class="row text-right custom-control custom-checkbox")
-					h4(class="ct-label selected-label", labelindex=labelItem.buttonIndex, labelid=labelItem.labelId, parentid=labelItem.parentLabel, data-childids=labelItem.childrenIds)
-						input( type="checkbox" name=labelItem.buttonIndex )
-						span #{labelItem.labelText}
+						tr
+							div(class="row text-center")
+								h4(class="button-checkbox ct-label selected-label", labelindex=labelItem.buttonIndex, labelid=labelItem.labelId, parentid=labelItem.parentLabel, data-childids=labelItem.childrenIds)
+									td
+										input( type="checkbox" name=labelItem.buttonIndex )
+									td
+										span #{labelItem.labelText}
 
 
 			//- Footer navigation
