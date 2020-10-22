@@ -191,6 +191,7 @@ app.get('/taskStats', function (req, res) {
 			LEFT OUTER JOIN pairs p ON t.taskId = p.taskId \
 			LEFT OUTER JOIN comparisons c ON p.pairId = c.pairId \
 		WHERE t.taskType == 1 \
+            AND c.userId == ? \
 		GROUP BY t.taskId \
 		ORDER BY t.taskId")
         .then(function (pairTaskData) {
@@ -202,7 +203,8 @@ app.get('/taskStats', function (req, res) {
             	LEFT OUTER JOIN elements e ON t.taskId = e.taskId \
             	LEFT OUTER JOIN elementLabels el ON e.elementId = el.elementId \
               JOIN assignedTasks at ON t.taskId = at.assignedTaskId \
-            WHERE t.taskType == 2 \
+            WHERE t.taskType == 2 OR \
+                    t.taskType == 4 \
                     AND at.userId == ? \
             GROUP BY t.taskId \
             ORDER BY t.taskId",
@@ -414,7 +416,8 @@ app.get('/taskStats/:taskId', function (req, res) {
 						JOIN elements AS e1 ON e1.elementId = p.leftElement \
 						JOIN elements AS e2 ON e2.elementId = p.rightElement \
 						JOIN comparisons c ON p.pairId = c.pairId \
-					WHERE p.taskId = ?", taskId);
+					WHERE p.taskId = ? \
+                            AND c.userId == ?", taskId, userId);
 
                 taskDetails["labels"] = compDetails;
 
@@ -432,13 +435,12 @@ app.get('/taskStats/:taskId', function (req, res) {
                 // Pairwise comparisons don't have label options, so null this
                 taskDetails["labelOptions"] = null;
 
-            } else if (taskData.taskType == 2) {
+            } else if (taskData.taskType == 2 || taskData.taskType == 4) {
 				var userId = "%"
 				
 				if(!req.session.user['isadmin']){
 					userId = req.session.user.userId;
 				}
-
 
                 var labelOptions = db.all("SELECT l.labelId AS lId, l.labelText AS lText, l.parentLabel AS lParent \
             FROM labels l \
