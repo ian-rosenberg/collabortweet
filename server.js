@@ -1112,6 +1112,7 @@ app.get('/multi-labelView/:id', function (req, res) {
 
             var taskData = labelData[0];
             var labelList = labelData[1];
+            var possibleLabels = Array();
 
             // A map of label IDs and their related metadata
             var labelMap = {};
@@ -1144,24 +1145,22 @@ app.get('/multi-labelView/:id', function (req, res) {
                     element['buttonIndex'] = topButtonIndex;
                     topButtonIndex++;
 
+                    // If this is the terminal child element, add it to the possible label choices
+                    if (element['children'].length < 1) {
+                        possibleLabels.push(element);
+                    }
                 }
 
                 var localButtonIndex = 1;
-                var childElements = [];
                 element['children'].forEach(child => {
                     child['buttonIndex'] = localButtonIndex;
                     localButtonIndex++;
 
+                    // If this is the terminal child element, add it to the possible label choices
                     if (child['children'].length < 1) {
-                        childElements.push(child);
+                        possibleLabels.push(child);
                     }
                 });
-
-                if (childElements.length > 0) {
-                    childElements.forEach(element => {
-                        console.log(element["labelText"]);
-                    });
-                }
             });
 
 
@@ -1170,7 +1169,7 @@ app.get('/multi-labelView/:id', function (req, res) {
                 taskId: taskData.taskId,
                 taskName: taskData.taskName,
                 question: taskData.question,
-                labels: labelList,
+                labels: possibleLabels,
                 authorized: req.session.user ? true : false,
                 user: req.session.user,
             }
