@@ -1147,11 +1147,24 @@ app.get('/multi-labelView/:id', function (req, res) {
                 }
 
                 var localButtonIndex = 1;
+                var childElements = [];
                 element['children'].forEach(child => {
                     child['buttonIndex'] = localButtonIndex;
                     localButtonIndex++;
+
+                    if (child['children'].length < 1) {
+                        childElements.push(child);
+                    }
                 });
+
+                if (childElements.length > 0) {
+                    childElements.forEach(element => {
+                        console.log(element["labelText"]);
+                    });
+                }
             });
+
+
 
             dataMap = {
                 taskId: taskData.taskId,
