@@ -186,19 +186,25 @@ app.get('/taskStats', function (req, res) {
         return;
     }
 
+    var userId = "%";
+
+    if (!req.session.user.isadmin) {
+        userId = req.session.user.userId;
+    }
+
+    console.log("User ID: " + userId);
+
     db.all("SELECT t.taskId, t.taskName, t.question, COUNT(c.compareId) AS counter \
 		FROM tasks t \
 			LEFT OUTER JOIN pairs p ON t.taskId = p.taskId \
 			LEFT OUTER JOIN comparisons c ON p.pairId = c.pairId \
+         JOIN assignedTasks at ON t.taskId = at.assignedTaskId \
 		WHERE t.taskType == 1 \
-            AND c.userId == ? \
+            AND at.userId == ? \
 		GROUP BY t.taskId \
-		ORDER BY t.taskId")
+		ORDER BY t.taskId", userId)
         .then(function (pairTaskData) {
-            var labelTaskData = '';
-
-            if (!req.session.user.isadmin) {
-                labelTaskData = db.all("SELECT t.taskId, t.taskName, t.question, COUNT(DISTINCT(e.elementId)) AS eCount, COUNT(el.elementLabelId) AS labelCount \
+            var labelTaskData = db.all("SELECT t.taskId, t.taskName, t.question, COUNT(DISTINCT(e.elementId)) AS eCount, COUNT(el.elementLabelId) AS labelCount \
             FROM tasks t \
             	LEFT OUTER JOIN elements e ON t.taskId = e.taskId \
             	LEFT OUTER JOIN elementLabels el ON e.elementId = el.elementId \
@@ -207,18 +213,7 @@ app.get('/taskStats', function (req, res) {
                     t.taskType == 4 \
                     AND at.userId == ? \
             GROUP BY t.taskId \
-            ORDER BY t.taskId",
-                    req.session.user.userId);
-            }
-            else {
-                labelTaskData = db.all("SELECT t.taskId, t.taskName, t.question, COUNT(DISTINCT(e.elementId)) AS eCount, COUNT(el.elementLabelId) AS labelCount \
-            FROM tasks t \
-            	LEFT OUTER JOIN elements e ON t.taskId = e.taskId \
-            	LEFT OUTER JOIN elementLabels el ON e.elementId = el.elementId \
-            WHERE t.taskType == 2 \
-            GROUP BY t.taskId \
-            ORDER BY t.taskId");
-            }
+            ORDER BY t.taskId", userId);
 
             return Promise.all([
                 pairTaskData,
@@ -229,10 +224,7 @@ app.get('/taskStats', function (req, res) {
 
             var pairTaskData = taskData[0];
             var labelTaskData = taskData[1];
-            var rangeData = '';
-
-            if (!req.session.user.isadmin) {
-                rangeData = db.all("SELECT t.taskId, t.taskName, t.question, COUNT(DISTINCT(e.elementId)) AS eCount, COUNT(DISTINCT(rd.elementId)) AS rdCount \
+            var rangeData = db.all("SELECT t.taskId, t.taskName, t.question, COUNT(DISTINCT(e.elementId)) AS eCount, COUNT(DISTINCT(rd.elementId)) AS rdCount \
             FROM tasks t \
               LEFT OUTER JOIN elements e ON t.taskId = e.taskId \
               LEFT OUTER JOIN rangeQuestions rq ON t.taskId  = rq.taskId \
@@ -242,20 +234,7 @@ app.get('/taskStats', function (req, res) {
             WHERE t.taskType == 3 \
                     AND at.userId == ? \
             GROUP BY t.taskId \
-            ORDER BY t.taskId",
-                    req.session.user.userId);
-            }
-            else {
-                rangeData = db.all("SELECT t.taskId, t.taskName, t.question, COUNT(DISTINCT(e.elementId)) AS eCount, COUNT(DISTINCT(rd.elementId)) AS rdCount \
-            FROM tasks t \
-              LEFT OUTER JOIN elements e ON t.taskId = e.taskId \
-              LEFT OUTER JOIN rangeQuestions rq ON e.taskId = rq.taskId \
-              LEFT OUTER JOIN rangeDecisions rd ON rq.rangeQuestionId = rd.rangeQuestionId \
-              LEFT OUTER JOIN users u on rd.userId = u.userId \
-            WHERE t.taskType == 3 \
-            GROUP BY t.taskId \
-            ORDER BY t.taskId");
-            }
+            ORDER BY t.taskId", userId);
 
             return Promise.all([
                 pairTaskData,
@@ -388,12 +367,17 @@ app.get('/taskStats/:taskId', function (req, res) {
     if (!("user" in req.session) || req.session.user === null) {
 
         console.log("User is not logged in...");
-        res.redirect('/')
+        res.redirect('/');
 
         return;
     }
 
-    var taskId = req.params.taskId
+    var taskId = req.params.taskId;
+    var userId = "%";
+
+    if (!req.session.user.admin) {
+        userId = req.session.user.userId;
+    }
 
     db.get("SELECT taskName, question, taskType FROM tasks WHERE taskId = ?", taskId)
         .then(function (taskData) {
@@ -403,12 +387,6 @@ app.get('/taskStats/:taskId', function (req, res) {
             };
 
             if (taskData.taskType == 1) {
-				var userId = "%"
-				
-				if(!req.session.user['isadmin']){
-					userId = req.session.user.userId;
-				}
-				
                 var compDetails = db.all("SELECT c.decision, \
 						e1.elementId AS lId, e1.elementText AS lText, e1.externalId AS lExt, \
 						e2.elementId AS rId, e2.elementText AS rText, e2.externalId AS rExt \
@@ -417,7 +395,7 @@ app.get('/taskStats/:taskId', function (req, res) {
 						JOIN elements AS e2 ON e2.elementId = p.rightElement \
 						JOIN comparisons c ON p.pairId = c.pairId \
 					WHERE p.taskId = ? \
-                            AND c.userId == ?", taskId, userId);
+                            AND c.userId LIKE ?", taskId, userId);
 
                 taskDetails["labels"] = compDetails;
 
@@ -427,7 +405,7 @@ app.get('/taskStats/:taskId', function (req, res) {
                   JOIN comparisons c ON u.userId=c.userId \
                   JOIN pairs p ON p.pairId=c.pairId \
               WHERE p.taskId = ? \
-			  AND u.userId = ? \
+			  AND u.userId LIKE ? \
               GROUP BY u.userId", taskId, userId);
 
                 taskDetails["userDetails"] = userLabelDetails;
@@ -435,17 +413,11 @@ app.get('/taskStats/:taskId', function (req, res) {
                 // Pairwise comparisons don't have label options, so null this
                 taskDetails["labelOptions"] = null;
 
-            } else if (taskData.taskType == 2 || taskData.taskType == 4) {
-				var userId = "%"
-				
-				if(!req.session.user['isadmin']){
-					userId = req.session.user.userId;
-				}
-
+            } else if (taskData.taskType == 2) {
                 var labelOptions = db.all("SELECT l.labelId AS lId, l.labelText AS lText, l.parentLabel AS lParent \
             FROM labels l \
             WHERE l.taskId = ? \
-            ORDER BY l.taskId", taskId);
+            ORDER BY l.labelId", taskId);
 
                 taskDetails["labelOptions"] = labelOptions;
 
@@ -455,7 +427,7 @@ app.get('/taskStats/:taskId', function (req, res) {
                 JOIN labels l ON el.labelId = l.labelId \
                 JOIN users u ON u.userId = el.userId \
             WHERE e.taskId = ? \
-			AND u.userId = ? \
+			AND u.userId LIKE ? \
             ORDER BY e.elementId", taskId, userId);
 
                 taskDetails["labels"] = labelDetails;
@@ -472,13 +444,6 @@ app.get('/taskStats/:taskId', function (req, res) {
                 taskDetails["userDetails"] = userLabelDetails;
 
             } else if (taskData.taskType == 3) {
-				var userId = "%"
-				
-				if(!req.session.user['isadmin']){
-					userId = req.session.user.userId;
-				}
-				
-
                 // Get the options users have for this task
                 var rangeQuestions = db.all(
                     "SELECT \
@@ -489,7 +454,7 @@ app.get('/taskStats/:taskId', function (req, res) {
                         rs.rangeOrder as rsOrder \
                     FROM rangeQuestions rq \
                         JOIN rangeScales rs ON rs.rangeQuestionId = rq.rangeQuestionId  \
-                    WHERE rq.taskId = ?", taskId);    
+                    WHERE rq.taskId = ?", taskId);
 
                 taskDetails["labelOptions"] = rangeQuestions;
 
@@ -533,6 +498,38 @@ app.get('/taskStats/:taskId', function (req, res) {
 
                 taskDetails["userDetails"] = userLabelDetails;
 
+            } else if (taskData.taskType == 4) {
+
+                var labelOptions = db.all("SELECT l.labelId AS lId, l.labelText AS lText, el.elementId AS eId, l.parentLabel AS lParent \
+            FROM elementLabels el \
+                    JOIN labels l ON el.labelId = l.labelId \
+            WHERE l.taskId = ? \
+            ORDER BY l.labelId", taskId);
+
+                taskDetails["labelOptions"] = labelOptions;
+
+                var labelDetails = db.all("SELECT e.elementId AS eId, e.elementText AS eText, el.elementLabelId AS elId, u.userId AS uId, u.screenname AS screenname, l.labelId AS lId, l.labelText AS lText \
+            FROM elements e \
+                JOIN elementLabels el ON e.elementId = el.elementId \
+                JOIN labels l ON el.labelId = l.labelId \
+                JOIN users u ON u.userId = el.userId \
+            WHERE e.taskId = ? \
+			AND u.userId LIKE ? \
+            ORDER BY e.elementId", taskId, userId);
+
+                taskDetails["labels"] = labelDetails;
+
+                // Get the users who have labeled this task
+                var userLabelDetails = db.all("SELECT u.userId AS uId, u.fname AS fname, u.lname AS lname, (SELECT COUNT(DISTINCT(elementId)) FROM elementLabels) AS count \
+              FROM users u \
+                  JOIN elementLabels el ON u.userId = el.userId \
+                  JOIN elements e ON el.elementId = e.elementId \
+              WHERE e.taskId = ? \
+			  AND u.userId = ? \
+              GROUP BY u.userId", taskId, userId);
+
+                taskDetails["userDetails"] = userLabelDetails;
+
             } else {
                 console.log("Unknown task type in taskStats/...");
                 taskDetails["empty"] = true;
@@ -557,11 +554,11 @@ app.get('/taskStats/:taskId', function (req, res) {
                 //  to their relevant scales
                 var rangeQuestions = new Map();
 
-                labelDetails.forEach(function(labelOption) {
+                labelDetails.forEach(function (labelOption) {
                     var rangeQuestionId = labelOption["rqId"];
 
                     // if this is a new range question...
-                    if ( !rangeQuestions.has(rangeQuestionId) ) {
+                    if (!rangeQuestions.has(rangeQuestionId)) {
                         // Create a default entry for this question
                         rangeQuestions.set(rangeQuestionId, {
                             "question": labelOption["rqQ"],
@@ -580,20 +577,20 @@ app.get('/taskStats/:taskId', function (req, res) {
                 // Update the label details with the map of range questions
                 labelDetails = rangeQuestions;
 
-                
+
 
                 // Aggregate the labels, so we can show groups of range scales 
                 //  for each element a user has labeled
                 var labeledElements = new Map();
 
-                taskDetails.forEach(function(labeledRangeScale) {
+                taskDetails.forEach(function (labeledRangeScale) {
                     var thisElementId = labeledRangeScale["eId"];
                     var thisUserId = labeledRangeScale["uId"];
 
                     var thisLabelMapKey = `${thisElementId}-${thisUserId}`;
 
                     // if this is a new element-user pair...
-                    if ( !labeledElements.has(thisLabelMapKey) ) {
+                    if (!labeledElements.has(thisLabelMapKey)) {
                         // Create a default entry for this element
                         labeledElements.set(thisLabelMapKey, {
                             "uId": labeledRangeScale["uId"],
@@ -613,6 +610,8 @@ app.get('/taskStats/:taskId', function (req, res) {
 
                 // Update the label details with the map of range questions
                 taskDetails = labeledElements;
+
+            } else if (taskInfoMap["taskInfo"]["taskType"] == 4) {
 
             }
 

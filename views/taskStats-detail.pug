@@ -161,7 +161,42 @@ html
 								br
 								br
 
+			else if taskInfo.taskType == 4
+				div(class="taskType" style="display:none" taskType=taskInfo.taskType)
+				h2 Labels:
 
+				div(class="row")
+					nav(aria-label="Page Navigation")
+						ul(class="pagination")
+							li(class="page-item", id="pre-button")
+								a(class="page-link", href="#") Previous
+							li(class="page-item", id="next-button")
+								a(class="page-link", href="#") Next
+
+				- var rowIndex = 0
+				each v in detailList
+					div(class="row reviewable-row", rowindex=rowIndex)
+						- rowIndex++
+						div(class="panel panel-default")
+
+							div(class="panel-heading") 
+								h4 Entry: #{rowIndex}
+								div !{v.eText}
+
+							div(class="panel-body")
+								h4 User: #{v.screenname}
+								form(id="update-label-"+v.elId, class="update-label", elementlabelid=v.elId)
+									table(class="table")
+										tbody
+											each label in labelDetails
+												if label.eId == v.eId
+														tr(class="row text-center")
+														h4(class="ct-label selected-label", eId=v.eId)
+															td
+																input(type="checkbox", labelId=label.lId)
+															td
+																span #{label.lText}
+									input(class="btn btn-primary btn-sm", type="button", value="Update")
 		include includes/jsFooter.pug
 
 		<!-- Script for running the pair viewport -->
