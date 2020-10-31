@@ -5,7 +5,7 @@ html
 		include includes/head.pug
 	body
 		include includes/nav.pug
-		
+
 		<!-- What Task Type is This? -->
 		div(style="display:none:" class="TaskType" id=taskInfo.taskType)
 
@@ -14,7 +14,7 @@ html
 			div(class="container")
 				h2 #{taskInfo.taskName} Question:
 				p #{taskInfo.question}
-		
+
 		//- Display options
 		div(class="container")
 			h2 User Label Counts:
@@ -58,7 +58,7 @@ html
 								p #{v.lText}
 								h4 Item ID: #{v.rId}
 								p #{v.rText}
-			
+
 			else if taskInfo.taskType == 2
 				div(class="taskType" style="display:none" taskType=taskInfo.taskType)
 				h2 Labels:
@@ -66,10 +66,10 @@ html
 				div(class="row")
 					nav(aria-label="Page Navigation")
 						ul(class="pagination")
-							li(class="page-item", id="pre-button")
-								a(class="page-link", href="#") Previous
-							li(class="page-item", id="next-button")
-								a(class="page-link", href="#") Next
+							li(class="page-item" id="pre-button")
+								a(class="page-link" href="#") Previous
+							li(class="page-item" id="next-button")
+								a(class="page-link" href="#") Next
 
 				- var rowIndex = 0
 				each v in detailList
@@ -91,7 +91,7 @@ html
 											else
 												option(value=opt.lId) #{opt.lText}
 									br
-									input(class="btn btn-primary btn-sm", type="button", value="Update")
+									input(class="btn btn-primary btn-sm" type="button" value="Update")
 
 
 			else if taskInfo.taskType == 3
@@ -101,10 +101,10 @@ html
 				div(class="row")
 					nav(aria-label="Page Navigation")
 						ul(class="pagination")
-							li(class="page-item", id="pre-button")
-								a(class="page-link", href="#") Previous
-							li(class="page-item", id="next-button")
-								a(class="page-link", href="#") Next
+							li(class="page-item" id="pre-button")
+								a(class="page-link" href="#") Previous
+							li(class="page-item" id="next-button")
+								a(class="page-link" href="#") Next
 
 				- var prevIndex = -1
 				- var rowIndex = 0
@@ -119,7 +119,7 @@ html
 								h4 Entry: #{rowIndex}
 								div !{thisElementLabels.eText}
 
-							
+
 							div(class="panel-body")
 								h4 User: #{thisElementLabels.screenname}
 
@@ -133,7 +133,7 @@ html
 									p(class="text-center")
 									p #{rq}
 
-									form(id="update-range", class="update-label", elementlabelid=rqAnswer.rdId)
+									form(id="update-range" class="update-label", elementlabelid=rqAnswer.rdId)
 										each rqScaleVal in rqOptions
 											span(style="width: 10%; display: inline-block;" class="text-left")
 												p #{rqScaleVal.rsValue}
@@ -156,7 +156,7 @@ html
 														decisionId=rqAnswer.rdId
 														name=groupName
 													)
-										input(id=rqAnswer.rdId, class="btn btn-primary btn-sm text-center", type="button", value="Update")
+										input(id=rqAnswer.rdId, class="btn btn-primary btn-sm text-center" type="button" value="Update")
 
 								br
 								br
@@ -168,35 +168,53 @@ html
 				div(class="row")
 					nav(aria-label="Page Navigation")
 						ul(class="pagination")
-							li(class="page-item", id="pre-button")
-								a(class="page-link", href="#") Previous
-							li(class="page-item", id="next-button")
-								a(class="page-link", href="#") Next
+							li(class="page-item" id="pre-button")
+								a(class="page-link" href="#") Previous
+							li(class="page-item" id="next-button")
+								a(class="page-link" href="#") Next
 
 				- var rowIndex = 0
-				each v in detailList
+				each v of detailList.keys()
+					- var thisKey = detailList.get(v) 
+					- var eId = thisKey["eId"]
+					- var screenname = thisKey["screenname"]
+					- var eText = thisKey["eText"]
+					- var elId = thisKey["elId"]
+					- var labelIds = thisKey["labels"]
+
 					div(class="row reviewable-row", rowindex=rowIndex)
 						- rowIndex++
 						div(class="panel panel-default")
 
 							div(class="panel-heading") 
 								h4 Entry: #{rowIndex}
-								div !{v.eText}
+								div !{eText}
 
 							div(class="panel-body")
-								h4 User: #{v.screenname}
-								form(id="update-label-"+v.elId, class="update-label", elementlabelid=v.elId)
-									table(class="table")
-										tbody
-											each label in labelDetails
-												if label.eId == v.eId
-														tr(class="row text-center")
-														h4(class="ct-label selected-label", eId=v.eId)
-															td
-																input(type="checkbox", labelId=label.lId)
-															td
-																span #{label.lText}
-									input(class="btn btn-primary btn-sm", type="button", value="Update")
+								h4 User: #{screenname}
+
+							form(id="update-label-"+v.elId, class="update-label", elementlabelid=elId)
+								table(class="table")
+									div(class="row text-center")
+										h4(class="ct-label selected-label", eId=eId)
+											each opt in labelDetails
+												tr
+													td
+														if labelIds.includes(opt.lId)
+															input( type="checkbox" value=opt.lId, checked="checked")
+														else
+															input( type="checkbox" value=opt.lId)
+													td
+														span #{opt.lText}
+
+								input(class="btn btn-primary btn-sm" type="button" value="Update")
+
+
+
+
+
+
+
 		include includes/jsFooter.pug
 
 		<!-- Script for running the pair viewport -->

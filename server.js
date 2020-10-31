@@ -413,14 +413,16 @@ app.get('/taskStats/:taskId', function (req, res) {
                 // Pairwise comparisons don't have label options, so null this
                 taskDetails["labelOptions"] = null;
 
-            } else if (taskData.taskType == 2) {
-                var labelOptions = db.all("SELECT l.labelId AS lId, l.labelText AS lText, l.parentLabel AS lParent \
+            } else if (taskData.taskType == 2 || taskData.taskType == 4) {
+                // Get the possible labels
+				var labelOptions = db.all("SELECT l.labelId AS lId, l.labelText AS lText, l.parentLabel AS lParent \
             FROM labels l \
             WHERE l.taskId = ? \
             ORDER BY l.labelId", taskId);
 
                 taskDetails["labelOptions"] = labelOptions;
 
+				// Get tbe user's labels
                 var labelDetails = db.all("SELECT e.elementId AS eId, e.elementText AS eText, el.elementLabelId AS elId, u.userId AS uId, u.screenname AS screenname, l.labelId AS lId, l.labelText AS lText \
             FROM elements e \
                 JOIN elementLabels el ON e.elementId = el.elementId \
@@ -498,39 +500,7 @@ app.get('/taskStats/:taskId', function (req, res) {
 
                 taskDetails["userDetails"] = userLabelDetails;
 
-            } else if (taskData.taskType == 4) {
-
-                var labelOptions = db.all("SELECT l.labelId AS lId, l.labelText AS lText, el.elementId AS eId, l.parentLabel AS lParent \
-            FROM elementLabels el \
-                    JOIN labels l ON el.labelId = l.labelId \
-            WHERE l.taskId = ? \
-            ORDER BY l.labelId", taskId);
-
-                taskDetails["labelOptions"] = labelOptions;
-
-                var labelDetails = db.all("SELECT e.elementId AS eId, e.elementText AS eText, el.elementLabelId AS elId, u.userId AS uId, u.screenname AS screenname, l.labelId AS lId, l.labelText AS lText \
-            FROM elements e \
-                JOIN elementLabels el ON e.elementId = el.elementId \
-                JOIN labels l ON el.labelId = l.labelId \
-                JOIN users u ON u.userId = el.userId \
-            WHERE e.taskId = ? \
-			AND u.userId LIKE ? \
-            ORDER BY e.elementId", taskId, userId);
-
-                taskDetails["labels"] = labelDetails;
-
-                // Get the users who have labeled this task
-                var userLabelDetails = db.all("SELECT u.userId AS uId, u.fname AS fname, u.lname AS lname, (SELECT COUNT(DISTINCT(elementId)) FROM elementLabels) AS count \
-              FROM users u \
-                  JOIN elementLabels el ON u.userId = el.userId \
-                  JOIN elements e ON el.elementId = e.elementId \
-              WHERE e.taskId = ? \
-			  AND u.userId = ? \
-              GROUP BY u.userId", taskId, userId);
-
-                taskDetails["userDetails"] = userLabelDetails;
-
-            } else {
+            }else {
                 console.log("Unknown task type in taskStats/...");
                 taskDetails["empty"] = true;
             }
@@ -611,9 +581,32 @@ app.get('/taskStats/:taskId', function (req, res) {
                 // Update the label details with the map of range questions
                 taskDetails = labeledElements;
 
-            } else if (taskInfoMap["taskInfo"]["taskType"] == 4) {
-
-            }
+            } else if(taskInfoMap["taskInfo"]["taskType"] == 4){
+				var labeledElements = new Map();
+				
+				taskDetails.forEach(function(multiLabelDecisions){
+					if(!labeledElements.has(multiLabelDecisions["eId"])){
+						labeledElements.set(multiLabelDecisions["eId"], {
+							"uId": multiLabelDecisions["uId"],
+                            "screenname": multiLabelDecisions["screenname"],
+                            "eId": multiLabelDecisions["eId"],
+                            "eText": multiLabelDecisions["eText"],
+                            "labels": new Array(),
+						});
+					}
+					
+					var labels = labeledElements.get(multiLabelDecisions["eId"])["labels"];
+					
+					taskDetails.forEach(function(decisions){
+						if(decisions["eId"] == multiLabelDecisions["eId"] && labels.indexOf(decisions["lId"]) < 0){
+							labels.push(decisions["lId"]);
+						}
+					});
+					
+				});
+				
+				taskDetails = labeledElements;
+			}
 
             // Calculate the agreement or quality of labels
             var agreementStats = calculateAgreement(taskInfo, taskDetails, userDetails);
