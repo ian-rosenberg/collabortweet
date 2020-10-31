@@ -16,13 +16,25 @@ var updateSelectedElement = function(elementLabelId, labelId) {
     })
 }
 
+var updateMultiLabelElement = function(elementId, elementLabelId, labelId){
+	result = {
+        elementId: elementId,
+        elementLabelId: elementLabelId,
+        newLabelId: labelId,
+    }
+
+	console.log(result);
+
+    $.post("/updateMulti-Label", result, function(data) {
+        console.log("Successfully sent update...");
+    })
+}
+
 var updateSelectedRangeElement = function(oldDecisionId, newScaleId){
 	result = {
         previousDecisionId: oldDecisionId,
         newScaleId: newScaleId,
     }
-
-	console.log(result);
 
     $.post("/updateRange", result, function(data) {
         console.log("Successfully sent update...");
@@ -66,6 +78,7 @@ var loadDataElements = function() {
 
     var pageSize = 10;
     var pageCursor = 1;
+    var labelIds = Array();
 
     handleNavClick(pageSize, pageCursor);    
 
@@ -86,10 +99,46 @@ var loadDataElements = function() {
         button.off("click").click(function() {
 
 			var selectedLabelId = form.children("select").children("option:selected").val();
-			updateSelectedElement(elementLabelId, selectedLabelId);
-
+			updateMultiLabelElement(elementLabelId, selectedLabelId);
 		});
     });
+
+    // Set the click function for this form's button
+    // to change elementLabels for the multi-label task
+    // Need to send the lId (label ids) for updating/creating
+    // new elId (element labels) in the database
+    
+   
+    
+    $("input:checkbox").change(function(){
+            
+        // Set an identifier to tell if
+        // we have un-checked a label
+        if(this.hasAttribute('checked')){
+            labelIds.push([$(this).val(), 0]);
+        }
+        else{
+            labelIds.push([$(this).val(), 1]);
+        }
+
+        // The element-label ID pair is part of the form...
+        var form = $(this).closest('[id^=update-multi-label]');
+        var elementLabelId = form.attr('elementlabelid');
+        var idText = form.attr('id');
+        var splitText = idText.split(' ');
+        var elementId = splitText[1];
+        // We need the button in this form.
+        var button = form.children("input:button");
+
+        
+        // Set the click function for this form's button to
+        //. update the element-label pair with the selected option
+        button.off("click").click(function() {
+            console.log("Update clicked!");
+            console.log(labelIds);
+        });
+    });
+
 	
 
     // Set the click function for this form's button to

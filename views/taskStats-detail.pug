@@ -193,7 +193,7 @@ html
 							div(class="panel-body")
 								h4 User: #{screenname}
 
-							form(id="update-label-"+v.elId, class="update-label", elementlabelid=elId)
+							form(id="update-multi-label "+eId, class="update-multi-label", elementlabelid=elId)
 								table(class="table")
 									div(class="row text-center")
 										h4(class="ct-label selected-label", eId=eId)
@@ -201,9 +201,9 @@ html
 												tr
 													td
 														if labelIds.includes(opt.lId)
-															input( type="checkbox" value=opt.lId, checked="checked")
+															input( type="checkbox" name=eId value=opt.lId, checked="checked")
 														else
-															input( type="checkbox" value=opt.lId)
+															input( type="checkbox" name=eId value=opt.lId)
 													td
 														span #{opt.lText}
 
