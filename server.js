@@ -408,21 +408,21 @@ app.get('/taskStats/:taskId', function (req, res) {
 			  AND u.userId LIKE ? \
               GROUP BY u.userId", taskId, userId);
 
-                taskDetails["userDetails"] = userLabelDetails;
+                taskDetails["userDetails"] = userLabelDetails; 
 
                 // Pairwise comparisons don't have label options, so null this
                 taskDetails["labelOptions"] = null;
 
             } else if (taskData.taskType == 2 || taskData.taskType == 4) {
                 // Get the possible labels
-				var labelOptions = db.all("SELECT l.labelId AS lId, l.labelText AS lText, l.parentLabel AS lParent \
+                var labelOptions = db.all("SELECT l.labelId AS lId, l.labelText AS lText, l.parentLabel AS lParent \
             FROM labels l \
             WHERE l.taskId = ? \
             ORDER BY l.labelId", taskId);
 
                 taskDetails["labelOptions"] = labelOptions;
 
-				// Get tbe user's labels
+                // Get tbe user's labels
                 var labelDetails = db.all("SELECT e.elementId AS eId, e.elementText AS eText, el.elementLabelId AS elId, u.userId AS uId, u.screenname AS screenname, l.labelId AS lId, l.labelText AS lText \
             FROM elements e \
                 JOIN elementLabels el ON e.elementId = el.elementId \
@@ -500,7 +500,7 @@ app.get('/taskStats/:taskId', function (req, res) {
 
                 taskDetails["userDetails"] = userLabelDetails;
 
-            }else {
+            } else {
                 console.log("Unknown task type in taskStats/...");
                 taskDetails["empty"] = true;
             }
@@ -581,32 +581,32 @@ app.get('/taskStats/:taskId', function (req, res) {
                 // Update the label details with the map of range questions
                 taskDetails = labeledElements;
 
-            } else if(taskInfoMap["taskInfo"]["taskType"] == 4){
-				var labeledElements = new Map();
-				
-				taskDetails.forEach(function(multiLabelDecisions){
-					if(!labeledElements.has(multiLabelDecisions["eId"])){
-						labeledElements.set(multiLabelDecisions["eId"], {
-							"uId": multiLabelDecisions["uId"],
+            } else if (taskInfoMap["taskInfo"]["taskType"] == 4) {
+                var labeledElements = new Map();
+
+                taskDetails.forEach(function (multiLabelDecisions) {
+                    if (!labeledElements.has(multiLabelDecisions["eId"])) {
+                        labeledElements.set(multiLabelDecisions["eId"], {
+                            "uId": multiLabelDecisions["uId"],
                             "screenname": multiLabelDecisions["screenname"],
                             "eId": multiLabelDecisions["eId"],
                             "eText": multiLabelDecisions["eText"],
                             "labels": new Array(),
-						});
-					}
-					
-					var labels = labeledElements.get(multiLabelDecisions["eId"])["labels"];
-					
-					taskDetails.forEach(function(decisions){
-						if(decisions["eId"] == multiLabelDecisions["eId"] && labels.indexOf(decisions["lId"]) < 0){
-							labels.push(decisions["lId"]);
-						}
-					});
-					
-				});
-				
-				taskDetails = labeledElements;
-			}
+                        });
+                    }
+
+                    var labels = labeledElements.get(multiLabelDecisions["eId"])["labels"];
+
+                    taskDetails.forEach(function (decisions) {
+                        if (decisions["eId"] == multiLabelDecisions["eId"] && labels.indexOf(decisions["lId"]) < 0) {
+                            labels.push(decisions["lId"]);
+                        }
+                    });
+
+                });
+
+                taskDetails = labeledElements;
+            }
 
             // Calculate the agreement or quality of labels
             var agreementStats = calculateAgreement(taskInfo, taskDetails, userDetails);
@@ -1470,16 +1470,48 @@ app.post('/updateLabel', function (req, res) {
         });
 })
 
+// Receive an updated tweet label
+app.post('/updateMulti-Label', function (req, res) {
+    console.log("Update label Body: " + req.body);
+    console.log("\tNew Label ID: " + req.body.newLabelId);
+    console.log("\tElement ID: " + req.body.elementId);
+    console.log("Are we removing this label?: " + req.body.toDelete);
+
+    console.log("\tUser ID: " + req.session.user.userId);
+    var userId = req.session.user.userId;
+
+    var elementId = req.body.elementId;
+    var decision = req.body.newLabelId;
+
+    if (req.body.toDelete < 1) {
+        db.get('DELETE FROM elementLabels WHERE labelId = :decision AND elementId = :elementId AND userId = :userId',
+            [decision, elementId, userId])
+            .then(function () {
+                console.log("Removed element logged...");
+                res.end();
+            });
+    }
+    else {
+        db.get('INSERT INTO elementLabels (labelId, elementId, userId) \
+                VALUES (:decision, :elementLabelId, :userId)',
+            [decision, elementId, userId])
+            .then(function () {
+                console.log("Insert logged...");
+                res.end();
+            });
+    }
+})
+
 // Receive an updated tweet range-based question's decision
 app.post('/updateRange', function (req, res) {
     console.log("Update label Body: " + req.body);
     console.log("\tNew Scale Decision: " + req.body.newScaleId);
     console.log("\tDecision ID: " + req.body.previousDecisionId);
 
-    
-	// Still no need for the userId, all decisions are tracked with a unique ID
-	//var userId = req.session.user.userId;
-	var prevDecision = req.body.previousDecisionId;
+
+    // Still no need for the userId, all decisions are tracked with a unique ID
+    //var userId = req.session.user.userId;
+    var prevDecision = req.body.previousDecisionId;
     var newDecision = req.body.newScaleId;
 
     db.get('UPDATE rangeDecisions SET rangeScaleId = :newDecision WHERE rangeDecisionId = :prevDecision',

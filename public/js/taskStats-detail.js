@@ -11,16 +11,13 @@ var updateSelectedElement = function(elementLabelId, labelId) {
         newLabelId: labelId,
     }
 
-    $.post("/updateLabel", result, function(data) {
-        console.log("Successfully sent update...");
-    })
 }
 
-var updateMultiLabelElement = function(elementId, elementLabelId, labelId){
+var updateMultiLabelElement = function(elementId, labelId, toRemove){
 	result = {
         elementId: elementId,
-        elementLabelId: elementLabelId,
         newLabelId: labelId,
+        toDelete: toRemove
     }
 
 	console.log(result);
@@ -107,35 +104,30 @@ var loadDataElements = function() {
     // to change elementLabels for the multi-label task
     // Need to send the lId (label ids) for updating/creating
     // new elId (element labels) in the database
-    
-   
-    
     $("input:checkbox").change(function(){
             
+        var form = $(this).closest('[id^=update-multi-label]');
+
         // Set an identifier to tell if
         // we have un-checked a label
         if(this.hasAttribute('checked')){
-            labelIds.push([$(this).val(), 0]);
+            labelIds.push([$(this).val(), 0, form.attr('id').split(' ')[1]]);
         }
         else{
-            labelIds.push([$(this).val(), 1]);
+            labelIds.push([$(this).val(), 1, form.attr('id').split(' ')[1]]);
         }
 
-        // The element-label ID pair is part of the form...
-        var form = $(this).closest('[id^=update-multi-label]');
-        var elementLabelId = form.attr('elementlabelid');
-        var idText = form.attr('id');
-        var splitText = idText.split(' ');
-        var elementId = splitText[1];
         // We need the button in this form.
         var button = form.children("input:button");
-
-        
+     
         // Set the click function for this form's button to
         //. update the element-label pair with the selected option
         button.off("click").click(function() {
-            console.log("Update clicked!");
-            console.log(labelIds);
+            labelIds.forEach(function (labelIdChecked) {
+                updateMultiLabelElement(labelIdChecked[2], labelIdChecked[0], labelIdChecked[1]);
+            });
+
+            labelIds = Array();
         });
     });
 
@@ -148,7 +140,6 @@ var loadDataElements = function() {
 		var oldDecisionId = $(this).parent().parent('form').attr('elementlabelid');
 		var newRadioAnswer = $(this).val();
 		var thisButton = $(this).parent().parent('form').children('input:button');
-		
 		
 		thisButton.off("click").click(function() {
 			updateSelectedRangeElement(oldDecisionId, newRadioAnswer);
