@@ -128,6 +128,8 @@ var loadDataElements = function() {
             });
 
             labelIds = Array();
+			
+			location.reload(true);
         });
     });
 
