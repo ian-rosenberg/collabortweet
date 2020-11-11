@@ -35,6 +35,11 @@ html
 			if dataMap.labelTasks.length > 0
 				h2 Available Labeling Tasks:
 				each v in dataMap.labelTasks
+					- var uniqueElementCount = 0
+					if v.taskId == 4
+						- uniqueElementCount = v.eCount / dataMap.labelTasks.length
+					else
+						- uniqueElementCount = v.eCount 
 					div(class="row")
 						div(class="panel panel-default")
 
@@ -48,7 +53,7 @@ html
 												a.text-white(href="/csv/" + v.taskId) CSV
 
 							div(class="panel-body")
-								p Elements to Label: #{v.eCount}
+								p Elements to Label: #{uniqueElementCount}
 								p Labels Provided: #{v.labelCount}
 								p #{v.question}
 

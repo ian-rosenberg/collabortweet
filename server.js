@@ -637,7 +637,7 @@ app.get('/export', function (req, res) {
             FROM tasks t \
             	LEFT OUTER JOIN elements e ON t.taskId = e.taskId \
             	LEFT OUTER JOIN elementLabels el ON e.elementId = el.elementId \
-            WHERE t.taskType == 2 \
+            WHERE t.taskType == 2 OR t.taskType == 4\
             GROUP BY t.taskId \
             ORDER BY t.taskId");
 
@@ -680,6 +680,7 @@ app.get('/csv/:taskId', function (req, res) {
     var taskId = req.params.taskId;
     var comp = false;
     var range = false;
+	var multiLabel = false;
 
     db.get("SELECT taskName, question, taskType FROM tasks WHERE taskId = ?", taskId)
         .then(function (taskData) {
@@ -725,7 +726,29 @@ app.get('/csv/:taskId', function (req, res) {
 
                 taskDetails["labels"] = labelDetails;
 
-            } else if (taskData.taskType == 3) {
+            } else if (taskData.taskType == 2) {
+
+                var labelDetails = db.all("SELECT \
+              e.elementId AS elementId, \
+              e.externalId AS externalId, \
+              e.elementText AS elementText, \
+              u.userId AS labelerId, \
+              u.screenname AS labelerScreenname, \
+              l.labelId AS labelId, \
+              l.labelText AS labelText, \
+              l.parentLabel AS parentLabel, \
+              pl.labelText AS parentLabelText \
+            FROM elements e \
+                JOIN elementLabels el ON e.elementId = el.elementId \
+                JOIN labels l ON el.labelId = l.labelId \
+                JOIN users u ON u.userId = el.userId \
+                LEFT OUTER JOIN labels pl ON l.parentLabel = pl.labelId \
+            WHERE e.taskId = ? \
+            ORDER BY e.elementId", taskId);
+
+                taskDetails["labels"] = labelDetails;
+
+            }else if (taskData.taskType == 3) {
 
                 var labelDetails = db.all("SELECT \
               e.elementId AS elementId, \
@@ -748,6 +771,26 @@ app.get('/csv/:taskId', function (req, res) {
                 taskDetails["ranges"] = labelDetails;
 
                 range = true;
+
+            } else if (taskData.taskType == 4) {
+
+                var labelDetails = db.all("SELECT \
+              e.elementId AS elementId, \
+              e.externalId AS externalId, \
+              u.userId AS labelerId, \
+              u.screenname AS labelerScreenname, \
+              l.labelId AS labelId, \
+              l.labelText AS labelText \
+            FROM elements e \
+                JOIN elementLabels el ON e.elementId = el.elementId \
+                JOIN labels l ON el.labelId = l.labelId \
+                JOIN users u ON u.userId = el.userId \
+            WHERE e.taskId = ? \
+            ORDER BY e.elementId", taskId);
+
+                taskDetails["multiLabels"] = labelDetails;
+				
+				multiLabel = true;
 
             } else {
                 console.log("Unknown task type in json/...");
@@ -797,6 +840,24 @@ app.get('/csv/:taskId', function (req, res) {
                     taskCSVToSend += concatStr + '\n';
                 })
             }
+            else if (multiLabel) {
+                var taskDetails = taskInfoMap["multiLabels"];
+
+                taskCSVToSend = 'elementId,externalId,labelId,labelText,labelerScreenname,labelerId\n';
+
+                var concatStr = '';
+
+                taskDetails.forEach(function (index) {
+                    concatStr = index['elementId'] + ',' +
+                        index['externalId'] + ',' +
+                        index['labelId'] + ',' +
+                        index['labelText'] + ',' +
+                        index['labelerScreenname'] + ',' +
+                        index['labelerId'];
+
+                    taskCSVToSend += concatStr + '\n';
+                })
+            }
             else {
                 taskCSVToSend = 'elementId,externalId,chosenLabel,labelerId,lablerScreenname,labelId,labelText\n';
 
@@ -811,7 +872,7 @@ app.get('/csv/:taskId', function (req, res) {
                         index['labelId'] + ',' +
                         index['labelText'] + ',' +
                         index['parentLabel'] + ',' +
-                        index['parentLabelText'];
+						index['parentLabelText'];
 
                     taskCSVToSend += concatStr + '\n';
                 })
@@ -849,7 +910,7 @@ app.get('/json/:taskId', function (req, res) {
 
                 taskDetails["labels"] = compDetails;
 
-            } else if (taskData.taskType == 2) {
+            } else if (taskData.taskType == 2 || taskData.taskType == 4) {
 
                 var labelDetails = db.all("SELECT \
               e.elementId AS elementId, \
