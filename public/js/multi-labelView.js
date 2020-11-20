@@ -68,8 +68,19 @@ var loadDataElements = function() {
 
 			elementId = dataElement.elementId;
 
+			$('input:button').hide();
+
 			$('input:button').click(function () {
 				sendSelectedElement();
+			});
+
+			$('input:checkbox').change(function () {
+				if ($('input:checked').length > 0) {
+					$('input:button').show();
+				}
+				else {
+					$('input:button').hide();
+				}
 			});
 		}
 	})
