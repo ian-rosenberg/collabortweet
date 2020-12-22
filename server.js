@@ -204,13 +204,13 @@ app.get('/taskStats', function (req, res) {
 		GROUP BY t.taskId \
 		ORDER BY t.taskId", userId)
         .then(function (pairTaskData) {
-            var labelTaskData = db.all("SELECT t.taskId, t.taskName, t.question, COUNT(DISTINCT(e.elementId)) AS eCount, COUNT(el.elementLabelId) AS labelCount \
+            labelTaskData = db.all("SELECT t.taskId, t.taskName, t.question, COUNT(DISTINCT(e.elementId)) AS eCount, COUNT(DISTINCT(el.elementId)) AS labelCount \
             FROM tasks t \
-            	LEFT OUTER JOIN elements e ON t.taskId = e.taskId \
-            	LEFT OUTER JOIN elementLabels el ON e.elementId = el.elementId \
-              JOIN assignedTasks at ON t.taskId = at.assignedTaskId \
-            WHERE t.taskType == 2 OR \
-                    t.taskType == 4 \
+                LEFT OUTER JOIN elements e ON t.taskId = e.taskId \
+                LEFT OUTER JOIN elementLabels el ON e.elementId = el.elementId \
+            JOIN assignedTasks at ON t.taskId = at.assignedTaskId \
+            WHERE t.taskType == 2 \
+                OR t.taskType == 4 \
                     AND at.userId == ? \
             GROUP BY t.taskId \
             ORDER BY t.taskId", userId);

@@ -105,7 +105,7 @@ var loadDataElements = function() {
     // Need to send the lId (label ids) for updating/creating
     // new elId (element labels) in the database
     $("input:checkbox").change(function(){
-            
+
         var form = $(this).closest('[id^=update-multi-label]');
 
         // Set an identifier to tell if
@@ -119,7 +119,14 @@ var loadDataElements = function() {
 
         // We need the button in this form.
         var button = form.children("input:button");
-     
+
+        if (labelInfo> 0) {
+           button.show();
+        }
+        else {
+            button.hide();
+        }
+       
         // Set the click function for this form's button to
         //. update the element-label pair with the selected option
         button.off("click").click(function() {
@@ -146,5 +153,11 @@ var loadDataElements = function() {
 		thisButton.off("click").click(function() {
 			updateSelectedRangeElement(oldDecisionId, newRadioAnswer);
 		});
-	});  
+    });  
+
+
+    // Hide the submit buttons on load of elements
+    // Only when an element has at least one checked box
+    // does that element's button show up
+    $('input:button').hide();
 }

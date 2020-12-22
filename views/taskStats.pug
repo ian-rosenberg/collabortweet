@@ -30,11 +30,14 @@ html
 			if dataMap.labelTasks.length > 0
 				h2 Available Labeling Tasks:
 				- var uniqueLabelCount
+				- var elementCount
 				each v in dataMap.labelTasks
 					if v.taskId == 4
-						- uniqueLabelCount = v.eCount / dataMap.labelTasks.length
+						- uniqueLabelCount = v.labelCount
+						- elementCount = v.eCount / dataMap.labelTasks.length
 					else
-						- uniqueLabelCount = v.eCount 
+						- uniqueLabelCount = v.labelCount
+						- elementCount = v.eCount
 					div(class="row")
 						div(class="panel panel-default")
 
@@ -43,8 +46,8 @@ html
 									a(href="/taskStats/" + v.taskId) Task #{v.taskId}: #{v.taskName}
 
 							div(class="panel-body")
-								p Elements to Label: #{uniqueLabelCount}
-								p Labels Provided: #{v.labelCount}
+								p Elements to Label: #{elementCount}
+								p Labels Provided: #{uniqueLabelCount}
 								p #{v.question}
 
 			if dataMap.rangeTasks.length > 0
