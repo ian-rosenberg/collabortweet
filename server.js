@@ -435,7 +435,7 @@ app.get('/taskStats/:taskId', function (req, res) {
                 taskDetails["labels"] = labelDetails;
 
                 // Get the users who have labeled this task
-                var userLabelDetails = db.all("SELECT u.userId AS uId, u.fname AS fname, u.lname AS lname, COUNT(*) AS count \
+                var userLabelDetails = db.all("SELECT u.userId AS uId, u.fname AS fname, u.lname AS lname, COUNT(DISTINCT(el.elementId)) AS count \
               FROM users u \
                   JOIN elementLabels el ON u.userId = el.userId \
                   JOIN elements e ON el.elementId = e.elementId \
