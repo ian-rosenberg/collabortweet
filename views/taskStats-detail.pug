@@ -197,18 +197,18 @@ html
 							table(class="table")
 								div(class="row text-center")
 									h4(class="ct-label selected-label", eId=eId)
-										form(id="update-multi-label "+eId, class="update-multi-label", elementlabelid=elId)
+										form(id="update-multi-label "+eId, class="update-multi-label")
 											each opt in labelDetails
 												tr
 													td
 														if labelIds.includes(opt.lId)
-															input( type="checkbox" name=eId value=opt.lId, checked="checked")
+															input( type="checkbox" checked="checked")
 														else
-															input( type="checkbox" name=eId value=opt.lId)
+															input( type="checkbox")
 													td
 														span #{opt.lText}
 													td
-														input(class="btn btn-primary btn-sm text-center" style="opacity: 0;" type="button" value="Update")
+														input(class="btn btn-primary btn-sm" disabled=true style="opacity: 0; cursor: default" type="button" value="Update" name=eId labelId=opt.lId)
 
 
 
