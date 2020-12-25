@@ -108,13 +108,15 @@ var multiLabelButton = function(button){
     var assocCheckbox = $(button).parent('td').prev('td').prev('td').children('input:checkbox')[0];
     var elementId = $(button).attr('name');
     var labelId = $(button).attr('labelId');
-    $('input:button').on('click', function(e){ 
-        if(assocCheckbox.hasAttribute('checked')){
-            updateMultiLabelElement(elementId, labelId, 1);
-        }else{
-            updateMultiLabelElement(elementId, labelId, 0);
-        }
-    });
+
+    if(assocCheckbox.hasAttribute('checked')){
+        updateMultiLabelElement(elementId, labelId, 1);
+    }else{
+        updateMultiLabelElement(elementId, labelId, 0);
+    }
+
+    $(button).css('opacity', '0');
+    $(button).prop('disabled', true);
 }
 
 var multiLabelUpdate = function(){
