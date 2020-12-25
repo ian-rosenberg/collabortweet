@@ -5,38 +5,40 @@ $( document ).ready(function() {
 
 var result = {};
 
+var labelInfo = Array();
+
 var updateSelectedElement = function(elementLabelId, labelId) {
     result = {
         elementLabelId: elementLabelId,
         newLabelId: labelId,
-    }
+    };
 
-}
+};
 
 var updateMultiLabelElement = function(elementId, labelId, toRemove){
 	result = {
         elementId: elementId,
         newLabelId: labelId,
         toDelete: toRemove
-    }
+    };
 
 	console.log(result);
 
-    $.post("/updateMulti-Label", result, function(data) {
+    $.post("/updateMulti-Label", result, function() {
         console.log("Successfully sent update...");
-    })
-}
+    });
+};
 
 var updateSelectedRangeElement = function(oldDecisionId, newScaleId){
 	result = {
         previousDecisionId: oldDecisionId,
         newScaleId: newScaleId,
-    }
+    };
 
-    $.post("/updateRange", result, function(data) {
+    $.post("/updateRange", result, function() {
         console.log("Successfully sent update...");
-    })
-}
+    });
+};
 
 var handleNavClick = function(pageSize, pageCursor) {
 
@@ -69,7 +71,7 @@ var handleNavClick = function(pageSize, pageCursor) {
            handleNavClick(pageSize, pageCursor + 1);
         });
     }
-}
+};
 
 var loadDataElements = function() {
 
@@ -104,48 +106,32 @@ var loadDataElements = function() {
     // to change elementLabels for the multi-label task
     // Need to send the lId (label ids) for updating/creating
     // new elId (element labels) in the database
-    $("input:checkbox").change(function(){
-
-        var form = $(this).closest('[id^=update-multi-label]');
+    $("input:checkbox").on("click", function(e){  
+        var button = $(this).parent().siblings('td').children('input:button');
+        
+        if(button.css('opacity') == '0')
+        {
+            $(button).css('opacity', '1');
+        }
+        else{
+            $(button).css('opacity', '0');
+        }
 
         // Set an identifier to tell if
         // we have un-checked a label
         if(this.hasAttribute('checked')){
-            labelIds.push([$(this).val(), 0, form.attr('id').split(' ')[1]]);
+            labelIds.push([$(this).val(), 0, $(this).name]);
         }
         else{
-            labelIds.push([$(this).val(), 1, form.attr('id').split(' ')[1]]);
+            labelIds.push([$(this).val(), 1, $(this).name]);
         }
-
-        // We need the button in this form.
-        var button = form.children("input:button");
-
-        if (labelInfo> 0) {
-           button.show();
-        }
-        else {
-            button.hide();
-        }
-       
-        // Set the click function for this form's button to
-        //. update the element-label pair with the selected option
-        button.off("click").click(function() {
-            labelIds.forEach(function (labelIdChecked) {
-                updateMultiLabelElement(labelIdChecked[2], labelIdChecked[0], labelIdChecked[1]);
-            });
-
-            labelIds = Array();
-			
-			location.reload(true);
-        });
     });
-
-	
 
     // Set the click function for this form's button to
 	// update the elementrange decision with the selected option
 	// Need to send the rsId (decision id) and radioAnswer (new scale value)
 	$('input:radio').change(function () {
+        console.log(this);
 		var oldDecisionId = $(this).parent().parent('form').attr('elementlabelid');
 		var newRadioAnswer = $(this).val();
 		var thisButton = $(this).parent().parent('form').children('input:button');
@@ -155,9 +141,4 @@ var loadDataElements = function() {
 		});
     });  
 
-
-    // Hide the submit buttons on load of elements
-    // Only when an element has at least one checked box
-    // does that element's button show up
-    $('input:button').hide();
-}
+};

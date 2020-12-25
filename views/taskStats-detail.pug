@@ -193,10 +193,11 @@ html
 							div(class="panel-body")
 								h4 User: #{screenname}
 
-							form(id="update-multi-label "+eId, class="update-multi-label", elementlabelid=elId)
-								table(class="table")
-									div(class="row text-center")
-										h4(class="ct-label selected-label", eId=eId)
+
+							table(class="table")
+								div(class="row text-center")
+									h4(class="ct-label selected-label", eId=eId)
+										form(id="update-multi-label "+eId, class="update-multi-label", elementlabelid=elId)
 											each opt in labelDetails
 												tr
 													td
@@ -206,8 +207,8 @@ html
 															input( type="checkbox" name=eId value=opt.lId)
 													td
 														span #{opt.lText}
-
-								input(class="btn btn-primary btn-sm" type="button" value="Update")
+													td
+														input(class="btn btn-primary btn-sm text-center" style="opacity: 0;" type="button" value="Update")
 
 
 
