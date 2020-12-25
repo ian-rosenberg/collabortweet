@@ -7,13 +7,39 @@ html
 		include includes/nav.pug
 
 		<!-- What Task Type is This? -->
-		div(style="display:none:" class="TaskType" id=taskInfo.taskType)
+		div(style="display:none" class="TaskType" id=taskInfo.taskType)
 
 		<!-- Main jumbotron -->
 		div(class="jumbotron")
 			div(class="container")
 				h2 #{taskInfo.taskName} Question:
 				p #{taskInfo.question}
+
+
+		- var pairwise = "Pair-Wise Comparison";
+		- var singleLabel = "Single Label";
+		- var rangebased = "Range-Based Question";
+		- var multiLabel = "Multi-Label";
+
+		<!-- Modal dialog box for submission -->
+		div(class="modal" id="modalDialog")
+			div(class="modal-dialog modal-lg text-center")
+				div(class="modal-content")
+					div(class="modal-header")
+						h5(class="modal-title")
+						if taskInfo.taskType == 1
+							#{pairwise}
+						else if taskInfo.taskType == 2
+							#{singleLabel}
+						else if taskInfo.taskType == 3
+							#{rangebased}
+						else if taskInfo.taskType == 4
+							#{multiLabel}
+					div(class="modal-body")
+						p Decision Recorded...
+					div(class="modal-footer")
+						button(type="button" class="btn btn-primary modal-button" data-dismiss="modal")
+							p Done
 
 		//- Display options
 		div(class="container")
@@ -42,7 +68,6 @@ html
 		//- Display options
 		div(class="container")
 			if taskInfo.taskType == 1
-				div(class="taskType" style="display:none" taskType=taskInfo.taskType)
 				h2 Comparisons:
 				- var rowIndex = 0
 				each v in detailList
@@ -60,7 +85,6 @@ html
 								p #{v.rText}
 
 			else if taskInfo.taskType == 2
-				div(class="taskType" style="display:none" taskType=taskInfo.taskType)
 				h2 Labels:
 
 				div(class="row")
@@ -91,11 +115,10 @@ html
 											else
 												option(value=opt.lId) #{opt.lText}
 									br
-									input(class="btn btn-primary btn-sm" type="button" value="Update")
+									input(class="btn btn-primary btn-sm" data-toggle="modal" data-target="#modalDialog" type="button" value="Update")
 
 
 			else if taskInfo.taskType == 3
-				div(class="taskType" style="display:none" taskType=taskInfo.taskType)
 				h2 Labels:
 
 				div(class="row")
@@ -156,13 +179,12 @@ html
 														decisionId=rqAnswer.rdId
 														name=groupName
 													)
-										input(id=rqAnswer.rdId, class="btn btn-primary btn-sm text-center" type="button" value="Update")
+										input(id=rqAnswer.rdId, class="btn btn-primary btn-sm text-center" data-toggle="modal" data-target="#modalDialog" type="button" value="Update")
 
 								br
 								br
 
 			else if taskInfo.taskType == 4
-				div(class="taskType" style="display:none" taskType=taskInfo.taskType)
 				h2 Labels:
 
 				div(class="row")

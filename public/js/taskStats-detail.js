@@ -2,7 +2,9 @@
 $( document ).ready(function() {
     loadDataElements();
 
-    switch($('.taskType').attr('taskType')){
+    console.log($('.TaskType').attr("id"));
+
+    switch($('.TaskType').attr("id")){
         case '2':
             singleLabelUpdate();
             break;
@@ -33,8 +35,6 @@ var updateMultiLabelElement = function(elementId, labelId, toRemove){
         newLabelId: labelId,
         toDelete: toRemove
     };
-
-	console.log(result);
 
     $.post('/updateMulti-Label', result, function() {
         console.log('Successfully sent update...');
@@ -141,6 +141,7 @@ var multiLabelUpdate = function(){
     
     $('input:button').click(function(){
         multiLabelButton(this);
+        $('#modalDialog').modal('show');
     });
 }
 
@@ -169,5 +170,9 @@ var loadDataElements = function() {
 
     $('#next-button').off('click').click(function() {
        handleNavClick(pageSize, pageCursor + 1);
+    });
+
+    $("#modalDialog").on('hide.bs.modal', function () {
+        loadDataElements();
     });
 };
