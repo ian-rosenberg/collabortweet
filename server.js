@@ -1544,7 +1544,7 @@ app.post('/updateMulti-Label', function (req, res) {
     var elementId = req.body.elementId;
     var decision = req.body.newLabelId;
 
-    if (req.body.toDelete < 1) {
+    if (req.body.toDelete > 0) {
         db.get('DELETE FROM elementLabels WHERE labelId = :decision AND elementId = :elementId AND userId = :userId',
             [decision, elementId, userId])
             .then(function () {

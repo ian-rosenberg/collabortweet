@@ -36,9 +36,9 @@ var updateMultiLabelElement = function(elementId, labelId, toRemove){
 
 	console.log(result);
 
-    // $.post('/updateMulti-Label', result, function() {
-    //     console.log('Successfully sent update...');
-    // });
+    $.post('/updateMulti-Label', result, function() {
+        console.log('Successfully sent update...');
+    });
 };
 
 var updateSelectedRangeElement = function(oldDecisionId, newScaleId){
