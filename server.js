@@ -423,7 +423,7 @@ app.get('/taskStats/:taskId', function (req, res) {
                 taskDetails["labelOptions"] = labelOptions;
 
                 // Get tbe user's labels
-                var labelDetails = db.all("SELECT e.elementId AS eId, e.elementText AS eText, el.elementLabelId AS elId, u.userId AS uId, u.screenname AS screenname, l.labelId AS lId, l.labelText AS lText \
+                var labels = db.all("SELECT e.elementId AS eId, e.elementText AS eText, el.elementLabelId AS elId, u.userId AS uId, u.screenname AS screenname, l.labelId AS lId, l.labelText AS lText \
             FROM elements e \
                 JOIN elementLabels el ON e.elementId = el.elementId \
                 JOIN labels l ON el.labelId = l.labelId \
@@ -432,7 +432,7 @@ app.get('/taskStats/:taskId', function (req, res) {
 			AND u.userId LIKE ? \
             ORDER BY e.elementId", taskId, userId);
 
-                taskDetails["labels"] = labelDetails;
+                taskDetails["labels"] = labels;
 
                 // Get the users who have labeled this task
                 var userLabelDetails = db.all("SELECT u.userId AS uId, u.fname AS fname, u.lname AS lname, COUNT(DISTINCT(el.elementId)) AS count \
